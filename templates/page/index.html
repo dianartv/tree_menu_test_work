@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% load menu_tags %}
+
+{% block content %}
+    <div><a href="/">Main Page</a></div>
+    <div>
+        <h2>First menu</h2>
+        {% show_menu 'main_menu' %}
+    </div>
+    <div>
+        <h2>Second menu</h2>
+        {% show_menu 'side_menu' %}
+    </div>
+{% endblock %}
