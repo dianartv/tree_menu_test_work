@@ -8,26 +8,23 @@ register = template.Library()
 
 @register.inclusion_tag('tags/menu.html', takes_context=True)
 def show_menu(context, menu_title: str) -> dict:
-    def _set_children(item: Item, items: list[Item]):
+    def _set_relationships(item: Item, items: list[Item]):
         if item.parent_id:
-            pid = item.parent_id
-            parent = list(filter(lambda i: i.id == pid,
-                                 items))[0]
+            parent = [i for i in items if i.id == item.parent_id][0]
             parent.children += [item]
+            item.parent = parent
+            pass
 
-    def _tree_generator(items: list,
+    def _tree_generator(items: list[Item],
                         depth: int = 0,
-                        parent: Item = None,
                         tree: MenuTree = None):
         for i in items:
-            if parent is None or parent.active or not i.parent_id:
+            if i.parent is None or i.parent.active:
                 tree.html += (f'<li>{"-" * depth} '
                               f'<a href="/{i.url}">{i.title}</a></li>')
             if i.children:
-                parent = i
                 _tree_generator(items=i.children,
                                 depth=depth + 1,
-                                parent=i,
                                 tree=tree)
 
     def _get_active_item(url_type: str, items: list[Item]) -> Item | None:
@@ -65,8 +62,8 @@ def show_menu(context, menu_title: str) -> dict:
     # Получение списка тир-0 родителей
     parents = [i for i in menu_items if i.parent_id is None]
 
-    # Установка наследников каждому родителю
-    [_set_children(i, menu_items) for i in menu_items]
+    # Установка родителей и наследников
+    [_set_relationships(i, menu_items) for i in menu_items]
 
     # Установка активного пункта меню
     if url_type:
